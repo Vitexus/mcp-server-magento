@@ -1,0 +1,10 @@
+{
+  "author": "CyberVitexus",
+  "authorUrl": "https://github.com/VitexSoftware",
+  "category": "developer",
+  "description": "MCP server for Magento 2: product lookup and search, stock, categories, attributes, order counts, revenue and product sales statistics.",
+  "homepage": "https://github.com/Vitexus/mcp-server-magento",
+  "identifier": "vitexsoftware-mcp-server-magento",
+  "name": "Magento 2 MCP Server",
+  "prompts": []
+}

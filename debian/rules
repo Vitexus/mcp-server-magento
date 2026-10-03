@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	# nothing to compile
+
+override_dh_auto_install:
+	npm ci --omit=dev
+	npm version --no-git-tag-version --allow-same-version \
+	    $(shell dpkg-parsechangelog -S Version | sed 's/-.*//')
+	install -d debian/mcp-server-magento/usr/share/mcp-server-magento
+	cp -r mcp-server.js package.json node_modules \
+	    debian/mcp-server-magento/usr/share/mcp-server-magento/
+	install -D -m 755 debian/mcp-server-magento.wrapper \
+	    debian/mcp-server-magento/usr/bin/mcp-server-magento
+	install -D -m 644 debian/mcp-server-magento.metainfo.xml \
+	    debian/mcp-server-magento/usr/share/metainfo/cz.vitexsoftware.mcp-server-magento.metainfo.xml
+	install -D -m 644 debian/mcp-server-magento.svg \
+	    debian/mcp-server-magento/usr/share/icons/hicolor/scalable/apps/cz.vitexsoftware.mcp-server-magento.svg
+
+override_dh_auto_test:
+	appstreamcli validate --pedantic --no-net \
+	    debian/mcp-server-magento.metainfo.xml

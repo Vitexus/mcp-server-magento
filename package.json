@@ -1,22 +1,33 @@
 {
-  "name": "mcp-magento2",
+  "name": "mcp-server-magento",
   "version": "1.0.0",
-  "description": "",
-  "main": "claude-magento-client.js",
+  "description": "Magento 2 MCP server (stdio)",
+  "main": "mcp-server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test test/"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Vítězslav Dvořák <info@vitexsoftware.cz>",
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
-    "@modelcontextprotocol/sdk": "^1.6.1",
+    "@modelcontextprotocol/sdk": "^1.32.0",
     "axios": "^1.8.1",
     "body-parser": "^1.20.3",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "zod": "^3.24.2"
-  }
+    "zod": "^3.25.76"
+  },
+  "bin": {
+    "mcp-server-magento": "mcp-server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vitexus/mcp-server-magento.git"
+  },
+  "homepage": "https://github.com/Vitexus/mcp-server-magento",
+  "files": [
+    "mcp-server.js"
+  ]
 }

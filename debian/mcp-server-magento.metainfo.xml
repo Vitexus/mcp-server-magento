@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>cz.vitexsoftware.mcp-server-magento</id>
+  <icon type="stock">cz.vitexsoftware.mcp-server-magento</icon>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Magento 2 MCP Server</name>
+  <summary>MCP server for Magento 2 products, orders and revenue</summary>
+  <description>
+    <p>
+      A Model Context Protocol (MCP) server that lets AI assistants query a
+      Magento 2 store through its REST API.
+    </p>
+    <ul>
+      <li>Product lookup, search, stock, categories and attributes</li>
+      <li>Order counts, revenue and product sales statistics by date range</li>
+      <li>Read-only mode that disables data-modifying tools</li>
+    </ul>
+  </description>
+  <url type="homepage">https://github.com/Vitexus/mcp-server-magento</url>
+  <url type="bugtracker">https://github.com/Vitexus/mcp-server-magento/issues</url>
+  <developer id="cz.vitexsoftware">
+    <name>Vítězslav Dvořák</name>
+  </developer>
+  <provides>
+    <binary>mcp-server-magento</binary>
+  </provides>
+  <releases>
+    <release version="1.0.0" date="2026-10-04">
+      <description>
+        <p>Initial Debian packaging.</p>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

@@ -3,15 +3,42 @@ const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
 const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
 const { z } = require('zod');
 const axios = require('axios');
-const dotenv = require('dotenv');
 const { format, parse, parseISO, isValid, addDays, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, isAfter, isBefore } = require('date-fns');
 
-// Load environment variables from .env file
-dotenv.config();
+const pkg = require('./package.json');
+
+// CLI flags handled before any configuration is required
+if (process.argv.includes('--version') || process.argv.includes('-v')) {
+  console.log(pkg.version);
+  process.exit(0);
+}
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log(`mcp-server-magento ${pkg.version}
+Magento 2 MCP server (stdio transport)
+
+Environment:
+  MAGENTO_API_TOKEN     (required, secret) Magento integration/admin bearer token
+  MAGENTO_BASE_URL      REST base URL, e.g. https://shop.example.com/rest/V1
+  MAGENTO_READ_ONLY     "true" disables tools that modify data
+  MAGENTO_INSECURE_TLS  "true" disables TLS certificate verification (development only)
+  MAGENTO_TIMEOUT_MS    HTTP timeout in milliseconds (default 30000)
+
+Options:
+  -v, --version  Print version
+  -h, --help     Print this help`);
+  process.exit(0);
+}
+
+// .env is loaded only for development runs from a checkout; secrets normally come from the environment
+if (require('fs').existsSync('.env')) {
+  require('dotenv').config({ quiet: true });
+}
 
 // Magento 2 API Configuration
 const MAGENTO_BASE_URL = process.env.MAGENTO_BASE_URL || 'https://your-magento-store.com/rest/V1';
 const MAGENTO_API_TOKEN = process.env.MAGENTO_API_TOKEN;
+const MAGENTO_TIMEOUT_MS = parseInt(process.env.MAGENTO_TIMEOUT_MS || '30000', 10);
+const MAX_OUTPUT_CHARS = 100000;
 
 // Validate environment variables
 if (!MAGENTO_API_TOKEN) {
@@ -301,9 +328,36 @@ async function fetchAllPages(endpoint, baseSearchCriteria) {
 
 // Create an MCP server
 const server = new McpServer({
-  name: "magento-mcp-server",
-  version: "1.0.0"
+  name: "mcp-server-magento",
+  version: pkg.version
 });
+
+
+const READ_ONLY = process.env.MAGENTO_READ_ONLY === 'true';
+
+const READ_ONLY_ANNOTATIONS = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true };
+const MUTATE_ANNOTATIONS = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true };
+
+// Register a tool with a title and explicit annotations; mutating tools are skipped in read-only mode
+function defineTool(name, title, description, schema, handler) {
+  const mutating = name.startsWith('update_') || name.startsWith('delete_') || name.startsWith('create_');
+  if (mutating && READ_ONLY) return;
+  server.registerTool(
+    name,
+    { title, description, inputSchema: schema, annotations: mutating ? MUTATE_ANNOTATIONS : READ_ONLY_ANNOTATIONS },
+    async (args) => {
+      const result = await handler(args);
+      for (const part of result.content || []) {
+        if (part.type === 'text' && part.text.length > MAX_OUTPUT_CHARS) {
+          part.text = part.text.slice(0, MAX_OUTPUT_CHARS) + '\n[output truncated]';
+        }
+      }
+      return result;
+    }
+  );
+}
+
+module.exports = { server };
 
 // Helper function to make authenticated requests to Magento 2 API
 async function callMagentoApi(endpoint, method = 'GET', data = null) {
@@ -319,17 +373,20 @@ async function callMagentoApi(endpoint, method = 'GET', data = null) {
       url,
       headers,
       data: data ? JSON.stringify(data) : undefined,
-      // Bypass SSL certificate verification for development
-      httpsAgent: new (require('https').Agent)({
-        rejectUnauthorized: false
+      timeout: MAGENTO_TIMEOUT_MS,
+      ...(process.env.MAGENTO_INSECURE_TLS === 'true' && {
+        httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
       })
     };
     
     const response = await axios(config);
     return response.data;
   } catch (error) {
-    console.error('Magento API Error:', error.response?.data || error.message);
-    throw error;
+    // Never log or rethrow the raw axios error: it carries the request headers (bearer token)
+    const status = error.response?.status;
+    const detail = error.response?.data?.message || error.message;
+    console.error('Magento API Error:', status || '', detail);
+    throw new Error(status ? `Magento API returned ${status}: ${detail}` : detail);
   }
 }
 
@@ -380,8 +437,9 @@ function formatSearchResults(results) {
 }
 
 // Tool: Get product by SKU
-server.tool(
+defineTool(
   "get_product_by_sku",
+  "Get Product By SKU",
   "Get detailed information about a product by its SKU",
   {
     sku: z.string().describe("The SKU (Stock Keeping Unit) of the product")
@@ -414,8 +472,9 @@ server.tool(
 );
 
 // Tool: Search products
-server.tool(
+defineTool(
   "search_products",
+  "Search Products",
   "Search for products using Magento search criteria",
   {
     query: z.string().describe("Search query (product name, description, etc.)"),
@@ -457,8 +516,9 @@ server.tool(
 );
 
 // Tool: Get product categories
-server.tool(
+defineTool(
   "get_product_categories",
+  "Get Product Categories",
   "Get categories for a specific product by SKU",
   {
     sku: z.string().describe("The SKU (Stock Keeping Unit) of the product")
@@ -530,8 +590,9 @@ server.tool(
 );
 
 // Tool: Get related products
-server.tool(
+defineTool(
   "get_related_products",
+  "Get Related Products",
   "Get products related to a specific product by SKU",
   {
     sku: z.string().describe("The SKU (Stock Keeping Unit) of the product")
@@ -583,8 +644,9 @@ server.tool(
 );
 
 // Tool: Get product stock information
-server.tool(
+defineTool(
   "get_product_stock",
+  "Get Product Stock",
   "Get stock information for a product by SKU",
   {
     sku: z.string().describe("The SKU (Stock Keeping Unit) of the product")
@@ -616,8 +678,9 @@ server.tool(
 );
 
 // Tool: Get product attributes
-server.tool(
+defineTool(
   "get_product_attributes",
+  "Get Product Attributes",
   "Get all attributes for a product by SKU",
   {
     sku: z.string().describe("The SKU (Stock Keeping Unit) of the product")
@@ -669,8 +732,9 @@ server.tool(
 );
 
 // Tool: Get product by ID
-server.tool(
+defineTool(
   "get_product_by_id",
+  "Get Product By ID",
   "Get detailed information about a product by its ID",
   {
     id: z.number().describe("The ID of the product")
@@ -725,8 +789,9 @@ server.tool(
 );
 
 // Tool: Advanced product search
-server.tool(
+defineTool(
   "advanced_product_search",
+  "Advanced Product Search",
   "Search for products with advanced filtering options",
   {
     field: z.string().describe("Field to search on (e.g., name, sku, price, status)"),
@@ -774,8 +839,9 @@ server.tool(
 );
 
 // Tool: Update product attribute
-server.tool(
+defineTool(
   "update_product_attribute",
+  "Update Product Attribute",
   "Update a specific attribute of a product by SKU",
   {
     sku: z.string().describe("The SKU (Stock Keeping Unit) of the product"),
@@ -848,8 +914,9 @@ server.tool(
 );
 
 // Tool: Get revenue
-server.tool(
+defineTool(
   "get_revenue",
+  "Get Revenue",
   "Get the total revenue for a given date range",
   {
     date_range: z.string().describe("Date range expression (e.g., 'today', 'yesterday', 'last week', 'this month', 'YTD', or a specific date range like '2023-01-01 to 2023-01-31')"),
@@ -938,8 +1005,9 @@ server.tool(
 );
 
 // Tool: Get order count
-server.tool(
+defineTool(
   "get_order_count",
+  "Get Order Count",
   "Get the number of orders for a given date range",
   {
     date_range: z.string().describe("Date range expression (e.g., 'today', 'yesterday', 'last week', 'this month', 'YTD', or a specific date range like '2023-01-01 to 2023-01-31')"),
@@ -1004,8 +1072,9 @@ server.tool(
 );
 
 // Tool: Get product sales
-server.tool(
+defineTool(
   "get_product_sales",
+  "Get Product Sales",
   "Get statistics about the quantity of products sold in a given date range",
   {
     date_range: z.string().describe("Date range expression (e.g., 'today', 'yesterday', 'last week', 'this month', 'YTD', or a specific date range like '2023-01-01 to 2023-01-31')"),
@@ -1145,8 +1214,9 @@ server.tool(
 );
 
 // Tool: Get revenue by country
-server.tool(
+defineTool(
   "get_revenue_by_country",
+  "Get Revenue By Country",
   "Get revenue filtered by country for a given date range",
   {
     date_range: z.string().describe("Date range expression (e.g., 'today', 'yesterday', 'last week', 'this month', 'YTD', or a specific date range like '2023-01-01 to 2023-01-31')"),
@@ -1255,8 +1325,9 @@ server.tool(
 );
 
 // Tool: Get customer ordered products by email
-server.tool(
+defineTool(
   "get_customer_ordered_products_by_email",
+  "Get Customer Ordered Products By Email",
   "Get all ordered products for a customer by email address",
   {
     email: z.string().email().describe("The email address of the customer")
@@ -1396,4 +1467,6 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+if (require.main === module) {
+  main().catch(console.error);
+}

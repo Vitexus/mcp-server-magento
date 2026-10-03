@@ -1,0 +1,7 @@
+mcp-server-magento (1.0.0-1) unstable; urgency=medium
+
+  * Initial Debian packaging (mcp-server-magento + mcprack companion).
+  * Tools carry titles and MCP annotations; MAGENTO_READ_ONLY mode added.
+  * TLS verification is on by default (MAGENTO_INSECURE_TLS to opt out).
+
+ -- Vítězslav Dvořák <info@vitexsoftware.cz>  Sun, 04 Oct 2026 10:00:00 +0200

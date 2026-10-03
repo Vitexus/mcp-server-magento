@@ -1,0 +1,41 @@
+Source: mcp-server-magento
+Section: javascript
+Priority: optional
+Maintainer: Vítězslav Dvořák <info@vitexsoftware.cz>
+Build-Depends:
+ appstream,
+ debhelper-compat (= 13),
+ nodejs (>= 18),
+ npm,
+Standards-Version: 4.7.0
+Homepage: https://github.com/Vitexus/mcp-server-magento
+Vcs-Git: https://github.com/Vitexus/mcp-server-magento.git
+Vcs-Browser: https://github.com/Vitexus/mcp-server-magento
+Rules-Requires-Root: no
+
+Package: mcp-server-magento
+Architecture: all
+Depends:
+ ${misc:Depends},
+ nodejs (>= 18),
+ hicolor-icon-theme,
+Description: MCP server for Magento 2 product, order and revenue queries
+ A Model Context Protocol (MCP) server that lets LLMs query a Magento 2
+ store over its REST API: products, stock, categories, orders, revenue
+ and customer purchases, plus an optional product attribute update that
+ can be disabled with MAGENTO_READ_ONLY=true.
+ .
+ This package vendors its production npm dependencies under
+ /usr/share/mcp-server-magento, as they are not available in the Debian
+ archive.
+
+Package: mcprack-mcp-server-magento
+Architecture: all
+Depends:
+ ${misc:Depends},
+ mcprack (>= 1.5.4),
+ mcp-server-magento (= ${binary:Version}),
+Description: Registers Magento 2 MCP server into mcprack catalog
+ Companion package for mcp-server-magento. Installing it registers the
+ mcp-server-magento binary as an available MCP server in the local
+ mcprack instance; removing it unregisters it again.

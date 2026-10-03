@@ -25,6 +25,27 @@ This is a Model Context Protocol (MCP) server that connects to a Magento 2 REST 
 - Support for relative date expressions like "today", "yesterday", "last week", "this month", "YTD"
 - Support for country filtering using both country codes and country names
 
+## Installation from Debian repository
+
+```bash
+sudo apt install mcp-server-magento            # server, /usr/bin/mcp-server-magento
+sudo apt install mcprack-mcp-server-magento    # optional: registers it in mcprack (read-only by default)
+```
+
+## Configuration (environment variables)
+
+| Variable | Secret | Description |
+|---|---|---|
+| `MAGENTO_API_TOKEN` | yes | Bearer token (required) |
+| `MAGENTO_BASE_URL` | no | e.g. `https://shop.example.com/rest/V1` |
+| `MAGENTO_READ_ONLY` | no | `true` hides tools that modify data |
+| `MAGENTO_INSECURE_TLS` | no | `true` disables TLS verification (development only) |
+| `MAGENTO_TIMEOUT_MS` | no | HTTP timeout, default 30000 |
+
+## Tool annotations
+
+All tools are read-only (`get_*`, `search_*`, `advanced_product_search`) except `update_product_attribute` (modifying, destructive, idempotent).
+
 ## Prerequisites
 
 - Node.js (v14 or higher)
