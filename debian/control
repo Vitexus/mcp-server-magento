@@ -33,7 +33,7 @@ Package: mcprack-mcp-server-magento
 Architecture: all
 Depends:
  ${misc:Depends},
- mcprack (>= 1.5.4),
+ mcprack (>= 1.6.0),
  mcp-server-magento (= ${binary:Version}),
 Description: Registers Magento 2 MCP server into mcprack catalog
  Companion package for mcp-server-magento. Installing it registers the
