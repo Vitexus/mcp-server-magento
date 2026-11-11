@@ -59,3 +59,10 @@ test('--version works without a token', () => {
   assert.strictEqual(r.status, 0);
   assert.match(r.stdout.trim(), /^\d+\.\d+\.\d+/);
 });
+
+test('server.json env variables are documented in the README', () => {
+  const fs = require('node:fs');
+  const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'debian', 'server.json'), 'utf8'));
+  for (const v of manifest.environmentVariables) assert.ok(readme.includes('`' + v.name + '`'), v.name);
+});

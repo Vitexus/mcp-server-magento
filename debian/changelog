@@ -1,3 +1,10 @@
+mcp-server-magento (1.0.0-2) unstable; urgency=medium
+
+  * Ship debian/server.json (config manifest for mcprack) and test that
+    it matches the README env table.
+
+ -- Vítězslav Dvořák <info@vitexsoftware.cz>  Wed, 11 Nov 2026 15:49:43 +0100
+
 mcp-server-magento (1.0.0-1) unstable; urgency=medium
 
   * Initial Debian packaging (mcp-server-magento + mcprack companion).

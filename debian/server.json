@@ -1,0 +1,39 @@
+{
+  "environmentVariables": [
+    {
+      "name": "MAGENTO_API_TOKEN",
+      "description": "Magento 2 integration/admin bearer token.",
+      "isRequired": true,
+      "isSecret": true
+    },
+    {
+      "name": "MAGENTO_BASE_URL",
+      "description": "Magento REST base URL, e.g. https://shop.example.com/rest/V1.",
+      "isRequired": true,
+      "isSecret": false
+    },
+    {
+      "name": "MAGENTO_READ_ONLY",
+      "description": "When true, update_product_attribute is not registered. Unset means writes are allowed; the mcprack companion sets true.",
+      "isRequired": false,
+      "isSecret": false,
+      "default": "true",
+      "choices": ["true", "false"]
+    },
+    {
+      "name": "MAGENTO_INSECURE_TLS",
+      "description": "When true, TLS certificate verification is disabled (development only).",
+      "isRequired": false,
+      "isSecret": false,
+      "default": "false",
+      "choices": ["true", "false"]
+    },
+    {
+      "name": "MAGENTO_TIMEOUT_MS",
+      "description": "HTTP timeout in milliseconds.",
+      "isRequired": false,
+      "isSecret": false,
+      "default": "30000"
+    }
+  ]
+}
