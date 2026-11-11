@@ -14,11 +14,13 @@
     },
     {
       "name": "MAGENTO_READ_ONLY",
-      "description": "When true, update_product_attribute is not registered. Unset means writes are allowed; the mcprack companion sets true.",
+      "description": "When true, update_product_attribute is not registered. Unset means writes are ALLOWED (the code is not read-only by default); the mcprack companion sets true.",
       "isRequired": false,
       "isSecret": false,
-      "default": "true",
-      "choices": ["true", "false"]
+      "choices": [
+        "true",
+        "false"
+      ]
     },
     {
       "name": "MAGENTO_INSECURE_TLS",
@@ -26,7 +28,10 @@
       "isRequired": false,
       "isSecret": false,
       "default": "false",
-      "choices": ["true", "false"]
+      "choices": [
+        "true",
+        "false"
+      ]
     },
     {
       "name": "MAGENTO_TIMEOUT_MS",
